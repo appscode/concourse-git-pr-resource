@@ -1,0 +1,7 @@
+package: github.com/appscode/concourse-git-pr-resource
+import:
+- package: github.com/google/go-github
+  version: ^15.0.0
+  subpackages:
+  - github
+- package: golang.org/x/oauth2
