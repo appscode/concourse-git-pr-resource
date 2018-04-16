@@ -41,8 +41,6 @@ type Output struct {
 }
 
 func main() {
-	//log.Println("out")
-
 	//takes input from stdin in JSON
 	decoder := json.NewDecoder(os.Stdin)
 
@@ -52,9 +50,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	//log.Println(inp)
-	//log.Println(os.Args[1])
 
 	//create client
 	ctx := context.Background()
@@ -85,11 +80,7 @@ func main() {
 
 	targetURL := ATC_EXTERNAL_URL + "/teams/" + BUILD_TEAM_NAME + "/pipelines/" + BUILD_PIPELINE_NAME + "/jobs/" + BUILD_JOB_NAME + "/builds/" + BUILD_NAME
 	description := "concourse-ci build : " + inp.Params.Status
-	gitContext := "concourse-ci"
-
-	if inp.Params.Context != "" {
-		gitContext = inp.Params.Context
-	}
+	gitContext := "concourse-ci " + BUILD_JOB_NAME + " " + BUILD_NAME
 
 	//update status of the pr
 	newStatus := &github.RepoStatus{
@@ -126,15 +117,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	//deubg----------------------
-	_, _, err = client.Issues.ListLabelsByIssue(context.Background(), inp.Source.Owner, inp.Source.Repo, id, nil)
+	//_, _, err = client.Issues.ListLabelsByIssue(context.Background(), inp.Source.Owner, inp.Source.Repo, id, nil)
 
-	if err != nil {
-		log.Println("err", err.Error())
-	}
-	//log.Println(L)
-
-	//log.Println(id)
+	//if err != nil {
+	//	log.Println("err", err.Error())
+	//}
 
 	//get pr from api and remove label
 	_, err = client.Issues.RemoveLabelForIssue(context.Background(), inp.Source.Owner, inp.Source.Repo, id, inp.Source.Label)

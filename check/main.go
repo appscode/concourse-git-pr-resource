@@ -31,7 +31,7 @@ type Output struct {
 }
 
 func main() {
-	//takes input from stdin in JSON
+	//takes JSON input from stdin
 	decoder := json.NewDecoder(os.Stdin)
 	var inp Input
 	err := decoder.Decode(&inp)
@@ -39,27 +39,17 @@ func main() {
 		log.Fatal(err)
 	}
 
-	//log.Println(inp)
-
-	//get list of prs from github api
+	//github client
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: inp.Source.AccessToken})
 	tc := oauth2.NewClient(ctx, ts)
 
 	client := github.NewClient(tc)
 
+	//get list of prs from github api
 	pullReq, _, err := client.PullRequests.List(context.Background(), inp.Source.Owner, inp.Source.Repo, nil)
 
-	//	log.Println("list")
-	//	for i, pr := range list {
-	//		log.Println(i, pr)
-	//	}
-
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-
-	//sort by update date
+	//sort prs' by update date
 	sort.Slice(pullReq, func(i, j int) bool {
 		x := *pullReq[i].UpdatedAt
 		y := *pullReq[j].UpdatedAt
@@ -75,13 +65,11 @@ func main() {
 			break
 		}
 	}
-	//log.Println(index)
 
 	var output []Output
 
 	//from index to rest, go through the rest of the array to filter correct prs
 	for i := index; i < len(pullReq); i++ {
-		//log.Println(i, *pullReq[i].User.Login)
 		flag := false
 		//if both is undefined, add all prs
 		if inp.Source.Org == "" && inp.Source.Label == "" {
@@ -109,15 +97,13 @@ func main() {
 
 		//add to output
 		if flag == true {
-			output = append(output, Output{strconv.Itoa(*pullReq[i].Number), *pullReq[i].Head.SHA})
+			op := Output{
+				Number: strconv.Itoa(*pullReq[i].Number),
+				Ref:    *pullReq[i].Head.SHA,
+			}
+			output = append(output, op)
 		}
 	}
-
-	//log.Println(output)
-	//	log.Println("PR")
-	//	for i, pr := range pullReq {
-	//		log.Println(i, pr)
-	//	}
 
 	b, err := json.Marshal(output)
 
