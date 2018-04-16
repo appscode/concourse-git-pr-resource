@@ -15,8 +15,9 @@ import (
 )
 
 type P struct {
-	Status string `json:"status"`
-	Path   string `json:"path"`
+	Status  string `json:"status"`
+	Context string `json:"context"`
+	Path    string `json:"path"`
 }
 
 type Input struct {
@@ -74,6 +75,8 @@ func main() {
 		log.Fatal(fmt.Sprint(err) + " : " + stderr.String())
 	}
 
+	ref := string(b[:len(b)-1])
+
 	ATC_EXTERNAL_URL := os.Getenv("ATC_EXTERNAL_URL")
 	BUILD_TEAM_NAME := os.Getenv("BUILD_TEAM_NAME")
 	BUILD_PIPELINE_NAME := os.Getenv("BUILD_PIPELINE_NAME")
@@ -84,6 +87,10 @@ func main() {
 	description := "concourse-ci build : " + inp.Params.Status
 	gitContext := "concourse-ci"
 
+	if inp.Params.Context != "" {
+		gitContext = inp.Params.Context
+	}
+
 	//update status of the pr
 	newStatus := &github.RepoStatus{
 		State:       github.String(inp.Params.Status),
@@ -91,8 +98,6 @@ func main() {
 		Description: &description,
 		Context:     &gitContext,
 	}
-
-	ref := string(b[:len(b)-1])
 
 	_, _, err = client.Repositories.CreateStatus(context.Background(), inp.Source.Owner, inp.Source.Repo, ref, newStatus)
 	if err != nil {
